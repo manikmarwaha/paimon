@@ -1,0 +1,60 @@
+site_name: Apache Paimon Intro
+site_description: A practical primer on Apache Paimon — internals, merge-on-read, and how it differs from Delta Lake.
+site_url: https://manikmarwaha.github.io/paimon/
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - 1. Three layers: 01-three-layers.md
+  - 2. Delta baseline: 02-delta-baseline.md
+  - 3. COW vs MOR: 03-cow-vs-mor.md
+  - 4. LSM tree: 04-lsm-tree.md
+  - 5. Why L0 overlaps: 05-l0-overlap.md
+  - 6. The read path: 06-read-path.md
+  - 7. Compaction & modes: 07-compaction-modes.md
+  - 8. Sequence & RowKind: 08-sequence-rowkind.md
+  - 9. Merge engines: 09-merge-engines.md
+  - 10. Changelog producers: 10-changelog-producers.md
+  - 11. Delta vs Paimon: 11-delta-vs-paimon.md
