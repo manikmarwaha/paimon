@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A practical primer on Apache Paimon — internals, merge-on-read, and how it differs from Delta Lake.">
+        <meta name="description" content="A practical primer on Apache Paimon — internals, merge-on-read, and how it differs from Delta Lake and Iceberg.">
       
       
       
@@ -27,7 +27,7 @@
     
     
       
-        <title>2. Delta baseline - Apache Paimon Intro</title>
+        <title>2. Delta & Iceberg baselines - Apache Paimon Intro</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#2-delta-lake-from-scratch-the-baseline" class="md-skip">
+        <a href="#2-delta-iceberg-the-copy-on-write-baselines" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              2. Delta baseline
+              2. Delta & Iceberg baselines
             
           </span>
         </div>
@@ -308,7 +308,7 @@
   <span class="md-ellipsis">
     
   
-    2. Delta baseline
+    2. Delta & Iceberg baselines
   
 
     
@@ -326,7 +326,7 @@
   <span class="md-ellipsis">
     
   
-    2. Delta baseline
+    2. Delta & Iceberg baselines
   
 
     
@@ -370,6 +370,56 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-iceberg-fits-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Iceberg fits in
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Where Iceberg fits in">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iceberg-supports-both-cow-and-mor-as-do-delta-and-paimon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iceberg supports both COW and MOR — as do Delta and Paimon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-else-iceberg-brings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What else Iceberg brings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-takeaway-for-this-primer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The takeaway for this primer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -611,7 +661,7 @@
   <span class="md-ellipsis">
     
   
-    11. Delta vs Paimon
+    11. Delta vs Iceberg vs Paimon
   
 
     
@@ -672,6 +722,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#where-iceberg-fits-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Iceberg fits in
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Where Iceberg fits in">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iceberg-supports-both-cow-and-mor-as-do-delta-and-paimon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iceberg supports both COW and MOR — as do Delta and Paimon
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-else-iceberg-brings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What else Iceberg brings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-takeaway-for-this-primer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The takeaway for this primer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -689,8 +789,8 @@
 
 
 
-<h1 id="2-delta-lake-from-scratch-the-baseline">2. Delta Lake from scratch (the baseline)<a class="headerlink" href="#2-delta-lake-from-scratch-the-baseline" title="Permanent link">&para;</a></h1>
-<p>Paimon is easiest to understand as "Delta, with one big idea swapped out." So first, precisely how Delta works.</p>
+<h1 id="2-delta-iceberg-the-copy-on-write-baselines">2. Delta &amp; Iceberg: the copy-on-write baselines<a class="headerlink" href="#2-delta-iceberg-the-copy-on-write-baselines" title="Permanent link">&para;</a></h1>
+<p>Paimon is easiest to understand as "Delta, with one big idea swapped out." So first, precisely how Delta works — then a quick look at Iceberg, which is structurally similar.</p>
 <p>A Delta table is just a directory containing two kinds of things: immutable Parquet data files, and a <code>_delta_log/</code> folder of numbered JSON commits. A commit holds no data — only a small list of actions such as "add file X (with these stats)" and "remove file Y." The commit numbers increase strictly: <code>000000.json</code>, <code>000001.json</code>, and so on.</p>
 <p><img alt="A Delta table = immutable data files + an append-only transaction log that decides which files are live." src="../img/diagram_04.png" /></p>
 <p><em>A Delta table = immutable data files + an append-only transaction log that decides which files are live.</em></p>
@@ -715,6 +815,53 @@
 <p class="admonition-title">The villain: write amplification</p>
 <p>Now imagine a stream delivering thousands of single-row updates per second. Copy-on-write would have Delta rewriting large files continuously — a <em>tiny logical change</em> causing a <em>huge physical write</em>, over and over. That ratio, <strong>write amplification</strong>, is the exact pain Paimon was built to remove.</p>
 </div>
+<h2 id="where-iceberg-fits-in">Where Iceberg fits in<a class="headerlink" href="#where-iceberg-fits-in" title="Permanent link">&para;</a></h2>
+<p><strong>Apache Iceberg</strong> (originally from Netflix, 2018) is the other major table format you'll hear about, and it's structurally a sibling to Delta:</p>
+<ul>
+<li><strong>Same storage model:</strong> immutable Parquet/ORC/Avro data files in object storage + a metadata layer that decides which files are live.</li>
+<li><strong>Different metadata structure.</strong> Where Delta has a flat append-only JSON log, Iceberg has a small tree:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>catalog → metadata.json → snapshot → manifest list (.avro) → manifest files (.avro) → data files
+</code></pre></div>
+<p>Each commit produces a new metadata file pointing at a snapshot, which points at a manifest list, which points at manifest files, which list the actual data files with column-level stats. The extra layer means very large tables (millions of files) can commit without rewriting a huge log.</p>
+<h3 id="iceberg-supports-both-cow-and-mor-as-do-delta-and-paimon">Iceberg supports both COW <em>and</em> MOR — as do Delta and Paimon<a class="headerlink" href="#iceberg-supports-both-cow-and-mor-as-do-delta-and-paimon" title="Permanent link">&para;</a></h3>
+<p>This is the important nuance: <strong>all three formats support both copy-on-write and merge-on-read as configurable modes</strong>. What differs is <em>how each implements MOR</em>, and what each is <em>optimised for</em>.</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>COW</th>
+<th>MOR implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Delta</td>
+<td>Default</td>
+<td><strong>Deletion vectors</strong> — bitmaps that mark rows as deleted in a Parquet file, so the file doesn't have to be rewritten.</td>
+</tr>
+<tr>
+<td>Iceberg</td>
+<td>Default (configurable per-op via <code>write.update.mode</code>, <code>write.delete.mode</code>, <code>write.merge.mode</code>)</td>
+<td><strong>Position deletes</strong> and <strong>equality deletes</strong> — small Avro/Parquet files listing which rows in which data files are dead.</td>
+</tr>
+<tr>
+<td>Paimon</td>
+<td>Available (<code>full-compaction.delta-commits = 1</code>)</td>
+<td><strong>LSM tree</strong> — new versions land in tiny files and are organised into levels; compaction runs in the background. Built for continuous high-frequency churn.</td>
+</tr>
+</tbody>
+</table>
+<p>Delta's deletion vectors and Iceberg's delete files both reduce write amplification compared to pure COW — a single-row update no longer rewrites the whole data file. But neither was <em>engineered</em> for continuous streaming churn the way Paimon's LSM tree was: in Delta/Iceberg, MOR is essentially a delete-marker bolted on top of a write-once file layout. In Paimon, MOR is the <em>primary</em> design — buckets, levels, sorted runs, sequence numbers, and background compaction all exist to make it work at high frequency.</p>
+<h3 id="what-else-iceberg-brings">What else Iceberg brings<a class="headerlink" href="#what-else-iceberg-brings" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Hidden partitioning</strong> — partition values are <em>derived</em> from columns (e.g. <code>days(event_time)</code>), so queries don't need to know the partition column to be efficient. Delta requires the query to reference the literal partition column.</li>
+<li><strong>Partition evolution</strong> — change the partition spec without rewriting data. Unique to Iceberg among the three.</li>
+<li><strong>Schema evolution by column ID</strong> — rename/reorder columns safely. Delta does this by position+name.</li>
+<li><strong>Branches &amp; tags</strong> — git-like named snapshots (added in Iceberg 1.2). Paimon copied this model.</li>
+</ul>
+<h3 id="the-takeaway-for-this-primer">The takeaway for this primer<a class="headerlink" href="#the-takeaway-for-this-primer" title="Permanent link">&para;</a></h3>
+<p>For the purposes of understanding Paimon's contribution, <strong>Delta and Iceberg are on the same side of the line</strong>: both designed first for batch analytics, with COW as the primary mode and MOR added on as a delete-marker mechanism. Iceberg has the richer metadata tree and stronger multi-engine story; Delta has tighter Databricks integration. <strong>Paimon flips the priority</strong> — MOR is the default mode and the storage layout (LSM tree, buckets, levels) is engineered for it from the ground up. That's Section 3.</p>
 
 
 
