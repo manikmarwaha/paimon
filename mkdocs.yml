@@ -1,5 +1,5 @@
 site_name: Apache Paimon Intro
-site_description: A practical primer on Apache Paimon — internals, merge-on-read, and how it differs from Delta Lake.
+site_description: A practical primer on Apache Paimon — internals, merge-on-read, and how it differs from Delta Lake and Iceberg.
 site_url: https://manikmarwaha.github.io/paimon/
 
 theme:
@@ -48,7 +48,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - 1. Three layers: 01-three-layers.md
-  - 2. Delta baseline: 02-delta-baseline.md
+  - 2. Delta & Iceberg baselines: 02-delta-baseline.md
   - 3. COW vs MOR: 03-cow-vs-mor.md
   - 4. LSM tree: 04-lsm-tree.md
   - 5. Why L0 overlaps: 05-l0-overlap.md
@@ -57,4 +57,4 @@ nav:
   - 8. Sequence & RowKind: 08-sequence-rowkind.md
   - 9. Merge engines: 09-merge-engines.md
   - 10. Changelog producers: 10-changelog-producers.md
-  - 11. Delta vs Paimon: 11-delta-vs-paimon.md
+  - 11. Delta vs Iceberg vs Paimon: 11-delta-vs-paimon.md
